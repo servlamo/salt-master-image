@@ -1,0 +1,32 @@
+FROM oraclelinux:9
+RUN echo "[salt]" >> /etc/yum.repos.d/salt.repo; \
+echo "name=Salt repo for OEL PY3" >> /etc/yum.repos.d/salt.repo; \
+echo "baseurl=https://repo.saltproject.io/salt/py3/redhat/9/x86_64/3006" >> /etc/yum.repos.d/salt.repo;  \
+echo "skip_if_unavailable=True" >> /etc/yum.repos.d/salt.repo; \
+echo "failovermethod=priority" >> /etc/yum.repos.d/salt.repo; \
+echo "deltarpm=0" >> /etc/yum.repos.d/salt.repo; \
+echo "enabled=1" >> /etc/yum.repos.d/salt.repo; \
+echo "enabled_metadata=1" >> /etc/yum.repos.d/salt.repo; \
+echo "gpgcheck=0" >> /etc/yum.repos.d/salt.repo; \
+dnf install -y epel-release; \
+dnf install -y salt-master salt-api salt-minion; \
+dnf install -y supervisor; \
+dnf clean all; \
+rm -rf /var/cache/dnf/*; \
+rm -rf /var/cache/yum/*; \
+salt-pip install pygit2==1.14.0; \ 
+# salt-pip install napalm; \
+pip cache purge; \
+rm -rf ~/.cache/pip; \
+rm -rf /root/.cache/pip
+COPY salt-exporter /opt/exporter/
+COPY supervisord.conf /etc/supervisord.conf
+EXPOSE 443 4505 4506
+VOLUME /etc/salt/master.d /etc/salt/pki/master /var/log/salt /var/cache/salt
+WORKDIR /usr/bin
+HEALTHCHECK --start-period=30s \
+  --interval=10s \
+  --timeout=10s \
+  --retries=3 \
+  CMD "salt-call --local --no-return-event --no-color   status.ping_master localhost || exit 1"
+CMD ["/usr/bin/supervisord","-c","/etc/supervisord.conf"]
