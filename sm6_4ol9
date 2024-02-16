@@ -8,9 +8,15 @@ echo "deltarpm=0" >> /etc/yum.repos.d/salt.repo; \
 echo "enabled=1" >> /etc/yum.repos.d/salt.repo; \
 echo "enabled_metadata=1" >> /etc/yum.repos.d/salt.repo; \
 echo "gpgcheck=0" >> /etc/yum.repos.d/salt.repo; \
+echo "[unit]" >> /etc/yum.repos.d/unit.repo; \
+echo "name=unit repo" >> /etc/yum.repos.d/unit.repo; \
+echo "baseurl=https://packages.nginx.org/unit/rhel/9/x86_64/" >> /etc/yum.repos.d/unit.repo; \
+echo "gpgcheck=0" >> /etc/yum.repos.d/unit.repo; \
+echo "enabled=1" >> /etc/yum.repos.d/unit.repo; \
 dnf install -y epel-release; \
 dnf install -y salt-master salt-api salt-minion; \
 dnf install -y supervisor; \
+dnf install -y unit; \
 dnf clean all; \
 rm -rf /var/cache/dnf/*; \
 rm -rf /var/cache/yum/*; \
@@ -20,7 +26,9 @@ pip cache purge; \
 rm -rf ~/.cache/pip; \
 rm -rf /root/.cache/pip
 COPY salt-exporter /opt/exporter/
+COPY salt-gui /opt/saltgui/
 COPY supervisord.conf /etc/supervisord.conf
+COPY mine_pt.py /opt/saltstack/salt/lib/python3.10/site-packages/salt/runners/
 EXPOSE 443 4505 4506
 VOLUME /etc/salt/master.d /etc/salt/pki/master /var/log/salt /var/cache/salt
 WORKDIR /usr/bin
